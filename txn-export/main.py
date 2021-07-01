@@ -128,16 +128,6 @@ class Monetary:
 
 def filter_txn(node, raw_txn: dict):
 
-    if raw_txn["category"] != "stake-mint":
-
-        return Monetary(
-            amount=raw_txn["amount"],
-            txid=raw_txn["txid"],
-            timestamp=raw_txn["time"],
-            address=raw_txn["address"],
-            io=raw_txn["category"],
-        )
-
     if raw_txn["category"] == "stake-mint":
 
         return Mint(
@@ -150,6 +140,14 @@ def filter_txn(node, raw_txn: dict):
             utxo_age=utxo_age(node, raw_txn["txid"]),
         )
 
+    else:
+        return Monetary(
+            amount=raw_txn["amount"],
+            txid=raw_txn["txid"],
+            timestamp=raw_txn["time"],
+            address=raw_txn["address"],
+            io=raw_txn["category"],
+        )
 
 def utxo_age(node, txid: str) -> int:
     """find out the age of the UTXO"""
@@ -173,7 +171,7 @@ def utxo_amount(node, txid: str) -> int:
     return vin_amount
 
 
-def export_to_excel(only_mints=True):
+def export_to_excel():
 
     node = Client(
         testnet=chkValue.get(),
@@ -181,31 +179,51 @@ def export_to_excel(only_mints=True):
         password=password.get(),
         ip="localhost",
     )
-    listtxns = (filter_txn(node, i) for i in node.listtransactions())
+    listtxns = [filter_txn(node, i) for i in node.listtransactions()]
 
     with xlsxwriter.Workbook("peercoin_export.xlsx") as workbook:
 
-        if only_mints:
-            worksheet = workbook.add_worksheet("Mints")
+        mints_worksheet = workbook.add_worksheet("Mints")
 
-            worksheet.write("A1", "TXID")
-            worksheet.set_column("A:A", 80)
-            worksheet.write("B1", "Blocktime")
-            worksheet.set_column("B:B", 25)
-            worksheet.write("C1", "Address")
-            worksheet.set_column("C:C", 50)
-            worksheet.write("D1", "UTXO age")
-            worksheet.set_column("D:D", 20)
-            worksheet.write("E1", "UTXO amount")
-            worksheet.set_column("E:E", 20)
-            worksheet.write("F1", "Reward")
-            worksheet.set_column("F:F", 20)
+        mints_worksheet.write("A1", "TXID")
+        mints_worksheet.set_column("A:A", 80)
+        mints_worksheet.write("B1", "Blocktime")
+        mints_worksheet.set_column("B:B", 25)
+        mints_worksheet.write("C1", "Address")
+        mints_worksheet.set_column("C:C", 50)
+        mints_worksheet.write("D1", "UTXO age")
+        mints_worksheet.set_column("D:D", 20)
+        mints_worksheet.write("E1", "UTXO amount")
+        mints_worksheet.set_column("E:E", 20)
+        mints_worksheet.write("F1", "Reward")
+        mints_worksheet.set_column("F:F", 20)
 
-            mints = [i.values() for i in listtxns if isinstance(i, Mint)]
+        mints = [i.values() for i in listtxns if isinstance(i, Mint)]
 
-            worksheet.add_table(
-                f"A3:F{len(mints)+5}", {"data": mints, "header_row": False}
-            )
+        mints_worksheet.add_table(
+            f"A3:F{len(mints)+5}", {"data": mints, "header_row": False}
+        )
+
+        ## Spend / Recieve table
+
+        monetary_worksheet = workbook.add_worksheet("Monetary")
+
+        monetary_worksheet.write("A1", "TXID")
+        monetary_worksheet.set_column("A:A", 80)
+        monetary_worksheet.write("B1", "Timestamp")
+        monetary_worksheet.set_column("B:B", 25)
+        monetary_worksheet.write("C1", "Address")
+        monetary_worksheet.set_column("C:C", 55)
+        monetary_worksheet.write("D1", "Amount")
+        monetary_worksheet.set_column("D:D", 20)
+        monetary_worksheet.write("E1", "In/Out")
+        monetary_worksheet.set_column("E:E", 20)
+
+        monetaries = [i.values() for i in listtxns if isinstance(i, Monetary)]
+
+        monetary_worksheet.add_table(
+            f"A3:E{len(monetaries)+5}", {"data": monetaries, "header_row": False}
+        )
 
 if __name__ == "__main__":
 
