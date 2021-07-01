@@ -30,25 +30,9 @@ class Client:
         else:
             self.ip = ip
 
-        if not username and not password:
-            if not directory:
-                try:
-                    (
-                        self.username,
-                        self.password,
-                    ) = self.userpass()  # try to read from ~/.ppcoin
-                except:
-                    self.username, self.password = self.userpass(
-                        dir="peercoin"
-                    )  # try to read from ~/.peercoin
-            else:
-                self.username, self.password = self.userpass(
-                    dir=directory
-                )  # try some other directory
+        self.username = username
+        self.password = password
 
-        else:
-            self.username = username
-            self.password = password
         if testnet is True:
             self.testnet = True
             self.port = 9904
@@ -64,20 +48,6 @@ class Client:
         self.session = requests.Session()
         self.session.auth = (self.username, self.password)
         self.session.headers.update({"content-type": "application/json"})
-
-    def userpass(self, dir="ppcoin"):
-        """Reads config file for username/password"""
-
-        source = os.path.expanduser("~/.{0}/{0}.conf").format(dir)
-        dest = open(source, "r")
-        with dest as conf:
-            for line in conf:
-                if line.startswith("rpcuser"):
-                    username = line.split("=")[1].strip()
-                if line.startswith("rpcpassword"):
-                    password = line.split("=")[1].strip()
-
-        return username, password
 
     def req(self, method, params=()):
         """send request to peercoind"""
