@@ -7,11 +7,6 @@ import tkinter as tk
 from datetime import datetime
 
 
-def convert_time(timestamp: int) -> str:
-
-    return datetime.fromtimestamp(timestamp).strftime("%Y-%m-%dT%H:%M:%S")
-
-
 class Client:
     """JSON-RPC Client."""
 
@@ -99,7 +94,7 @@ class Mint:
     def values(self):
         return [
             self.txid,
-            convert_time(self.blocktime),
+            self.blocktime,
             self.address,
             self.utxo_age,
             self.utxo_amount,
@@ -119,7 +114,7 @@ class Monetary:
     def values(self):
         return [
             self.txid,
-            convert_time(self.timestamp),
+            self.timestamp,
             self.address,
             self.amount,
             self.io,
