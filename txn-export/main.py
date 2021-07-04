@@ -135,6 +135,18 @@ def filter_txn(node, raw_txn: dict):
             utxo_age=utxo_age(node, raw_txn["txid"]),
         )
 
+    if raw_txn["category"] == "stake":
+
+        return Mint(
+            reward=raw_txn["amount"],
+            txid=raw_txn["txid"],
+            blocktime=raw_txn["blocktime"],
+            address=raw_txn["address"],
+            utxo=node.getrawtransaction(raw_txn["txid"])["vin"][0]["txid"],
+            utxo_amount=utxo_amount(node, raw_txn["txid"]),
+            utxo_age=utxo_age(node, raw_txn["txid"]),
+        )
+
     else:
         return Monetary(
             amount=raw_txn["amount"],
